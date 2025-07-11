@@ -26,14 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest-large
-            build-targets: zip
           - os: windows-latest
             build-targets: portable
           - os: ubuntu-22.04
-            build-targets: tar.gz
-          - os: ubuntu-22.04-arm
-            build-targets: tar.gz
+            build-targets: deb
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -88,5 +84,6 @@ jobs:
             packages/insomnia/dist/*.exe
             packages/insomnia/dist/*.tar.gz
             packages/insomnia/dist/*.zip
+            packages/insomnia/dist/*.deb
             packages/insomnia/dist/*.yml
             packages/insomnia/dist/squirrel-windows/*.exe
