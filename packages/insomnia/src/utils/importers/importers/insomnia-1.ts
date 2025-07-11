@@ -51,13 +51,14 @@ const FORMAT_MAP: Record<Format, string> = {
 const importRequestGroupItem = (item: Item): ImportRequest => {
   const environment = item.environments?.base ?? {};
 
-  const count = requestGroupCount++;
+  // Zachowaj oryginalne _id jeśli istnieje, w przeciwnym razie generuj nowe
+  const groupId = (item as any)._id || `__GRP_${requestGroupCount++}__`;
   return {
     _type: 'request_group',
-    _id: `__GRP_${count}__`,
+    _id: groupId,
     parentId: '__WORKSPACE_ID__',
     environment,
-    name: item.name || `Imported Folder ${count}`,
+    name: item.name || `Imported Folder ${requestGroupCount}`,
   };
 };
 
@@ -72,7 +73,8 @@ const importRequestItem =
     url = '',
     method = 'GET',
     params = [],
-  }: Item): ImportRequest => {
+    _id,
+  }: Item & { _id?: string }): ImportRequest => {
     let contentTypeHeader = headers.find(({ name }) => name.toLowerCase() === 'content-type');
 
     if (__insomnia?.format) {
@@ -115,12 +117,13 @@ const importRequestItem =
       };
     }
 
-    const count = requestCount++;
+    // Zachowaj oryginalne _id jeśli istnieje, w przeciwnym razie generuj nowe
+    const requestId = _id || `__REQ_${requestCount++}__`;
     return {
       _type: 'request',
-      _id: `__REQ_${count}__`,
+      _id: requestId,
       parentId,
-      name: name || `Imported HAR ${count}`,
+      name: name || `Imported HAR ${requestCount}`,
       url,
       method,
       body,
@@ -151,6 +154,6 @@ export const convert: Converter = rawData => {
 
   return data.items.flatMap(item => {
     const requestGroup = importRequestGroupItem(item);
-    return [requestGroup, ...item.requests.map(importRequestItem(requestGroup._id))];
+    return [requestGroup, ...item.requests.map((req: any) => importRequestItem(requestGroup._id)({ ...req }))];
   });
 };

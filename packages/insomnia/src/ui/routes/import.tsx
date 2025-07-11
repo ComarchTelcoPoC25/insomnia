@@ -155,6 +155,23 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
   if (typeof workspaceId === 'string' && workspaceId) {
+    // --- CLEAR WORKSPACE BEFORE IMPORT ---
+    // Use the same logic as workspace deletion: remove all descendants and the workspace itself
+    const workspace = await models.workspace.getById(workspaceId);
+    if (workspace) {
+      await models.stats.incrementDeletedRequestsForDescendents(workspace); // clean stats
+      // Remove all descendants (requests, groups, envs, etc.)
+      const db = (await import('../../common/database')).database;
+      // Use withDescendants to get all descendants, then remove them
+      const descendants = await db.withDescendants(workspace);
+      for (const doc of descendants) {
+        // Don't remove the workspace itself
+        if (doc._id !== workspace._id) {
+          await db.remove(doc);
+        }
+      }
+    }
+    // --- END CLEAR ---
     await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });

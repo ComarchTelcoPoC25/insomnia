@@ -411,7 +411,10 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
             parentId: ResourceIdMap.get(resource.parentId),
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create({
+            ...resource,
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
         } else {
           await db.docCreate(model.type, {
             ...resource,
@@ -532,7 +535,10 @@ export const importResourcesToNewWorkspace = async ({
             parentId: newParentId,
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create({
+            ...resource,
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
         } else {
           await db.docCreate(model.type, {
             ...resource,
