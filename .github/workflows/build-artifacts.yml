@@ -1,0 +1,66 @@
+name: Build Insomnia Artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-linux:
+    name: Build Insomnia for Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and package (AppImage, deb, tar.gz)
+        run: npm run app-package -w insomnia
+        env:
+          NODE_OPTIONS: '--max_old_space_size=6144'
+      - name: Archive Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: insomnia-linux-artifacts
+          path: |
+            packages/insomnia/dist/*.AppImage
+            packages/insomnia/dist/*.deb
+            packages/insomnia/dist/*.tar.gz
+
+  build-windows:
+    name: Build Insomnia for Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and package (Windows)
+        run: |
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+      - name: Archive Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: insomnia-windows-artifacts
+          path: |
+            packages/insomnia/dist/*.exe
+            packages/insomnia/dist/squirrel-windows/*

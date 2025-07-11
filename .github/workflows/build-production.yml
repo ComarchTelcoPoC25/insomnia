@@ -1,0 +1,12 @@
+# This workflow is now disabled in favor of a dedicated build-artifacts workflow.
+# See build-artifacts.yml for current build logic.
+name: Build Production Artifacts (DISABLED)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  disabled:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This workflow is disabled. Use build-artifacts.yml."
